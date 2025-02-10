@@ -1,5 +1,7 @@
 # Recordatorio de Cumpleaños 🎂
 
+![Pantallazo del proyecto corriendo](pantallazoProyecto.jpg)
+
 Aplicación web para gestionar cumpleaños con recordatorios automáticos. Desarrollada con **HTML**, **CSS** y **JavaScript** puro.
 
 ## Características Principales
