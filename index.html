@@ -115,7 +115,112 @@
 
         <div class="birthday-list" id="birthdayList"></div>
     </div>
+ <script>
+        class BirthdayReminder {
+            constructor() {
+                this.birthdays = JSON.parse(localStorage.getItem('birthdays')) || [];
+                this.loadBirthdays();
+                this.checkNotifications();
+                setInterval(() => this.checkNotifications(), 60000); // Revisar cada minuto
+            }
 
+            saveToLocalStorage() {
+                localStorage.setItem('birthdays', JSON.stringify(this.birthdays));
+            }
+
+            addBirthday(name, date, notificationDays) {
+                const newBirthday = {
+                    id: Date.now(),
+                    name,
+                    date,
+                    notificationDays: parseInt(notificationDays)
+                };
+                this.birthdays.push(newBirthday);
+                this.saveToLocalStorage();
+                this.loadBirthdays();
+            }
+
+            deleteBirthday(id) {
+                this.birthdays = this.birthdays.filter(b => b.id !== id);
+                this.saveToLocalStorage();
+                this.loadBirthdays();
+            }
+
+            loadBirthdays() {
+                const list = document.getElementById('birthdayList');
+                list.innerHTML = '';
+                
+                this.birthdays.forEach(birthday => {
+                    const item = document.createElement('div');
+                    item.className = 'birthday-item';
+                    if(this.isNotificationPending(birthday)) {
+                        item.classList.add('notification');
+                    }
+                    
+                    const nextDate = this.getNextBirthday(birthday.date);
+                    const daysRemaining = this.calculateDaysRemaining(nextDate);
+                    
+                    item.innerHTML = `
+                        <div>
+                            <h3>${birthday.name}</h3>
+                            <p>Próximo cumpleaños: ${nextDate.toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                            <span class="days-remaining">${daysRemaining} días</span>
+                            <button class="delete-btn" onclick="reminder.deleteBirthday(${birthday.id})">Eliminar</button>
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+            }
+
+            getNextBirthday(dateString) {
+                const today = new Date();
+                const birthDate = new Date(dateString);
+                const currentYear = today.getFullYear();
+                
+                let nextDate = new Date(currentYear, birthDate.getMonth(), birthDate.getDate());
+                if(nextDate < today) {
+                    nextDate.setFullYear(currentYear + 1);
+                }
+                return nextDate;
+            }
+
+            calculateDaysRemaining(nextDate) {
+                const today = new Date();
+                const diff = nextDate - today;
+                return Math.ceil(diff / (1000 * 60 * 60 * 24));
+            }
+
+            isNotificationPending(birthday) {
+                const nextDate = this.getNextBirthday(birthday.date);
+                const daysRemaining = this.calculateDaysRemaining(nextDate);
+                return daysRemaining <= birthday.notificationDays;
+            }
+
+            checkNotifications() {
+                const pending = this.birthdays.filter(b => this.isNotificationPending(b));
+                if(pending.length > 0) {
+                    const names = pending.map(b => b.name).join(', ');
+                    alert(`Recordatorio: Cumpleaños próximos: ${names}`);
+                }
+            }
+        }
+
+        const reminder = new BirthdayReminder();
+
+        document.getElementById('birthdayForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const date = document.getElementById('birthdate').value;
+            const notificationDays = document.getElementById('notificationDays').value;
+            
+            reminder.addBirthday(name, date, notificationDays);
+            
+            e.target.reset();
+            document.getElementById('name').focus();
+        });
+    </script>
     
 </body>
 </html>
